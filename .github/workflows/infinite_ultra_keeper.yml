@@ -61,7 +61,7 @@ jobs:
           # Vercel එක Restart වෙද්දී බොට් එක Reconnect වෙන එක නවත්වන්න නම්
           # Vercel එක අලුත් වෙන විනාඩි 2ක කාලය තුළ GitHub එකෙන් දිගටම Ping කරනවා.
           echo "Starting Zero-Reconnect Bridge..."
-          URL="https://abc-5i9aeijqd-asitha-vercels-projects.vercel.app/"
+          URL="https://yasiya-8pegmyplo-asitha-vercels-projects.vercel.app/"
           
           # විනාඩි 2ක් (තත්පර 120ක්) තත්පර 10න් 10ට Ping කරමින් Connection එක අල්ලන් සිටී
           for i in {1..12}; do
