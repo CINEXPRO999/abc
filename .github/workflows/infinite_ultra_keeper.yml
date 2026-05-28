@@ -50,7 +50,7 @@ jobs:
       - name: 🌐 5. Advanced Relay Bridge (10-Minute Safety Buffer)
         run: |
           # Vercel Restart එක කොයි වෙලාවේ වුණත් අල්ලගැනීමට කාලය විනාඩි 10 දක්වා වැඩි කර ඇත
-          URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/"
+          URL="https://abc-1pio-gbpf52yty-xproverce-s-projects.vercel.app/"
           echo "Starting Safety Bridge (600 seconds)..."
           
           # තත්පර 10න් 10ට විනාඩි 10ක් පුරා Pulse යවයි (Loop 60ක්)
