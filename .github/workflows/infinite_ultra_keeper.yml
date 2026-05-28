@@ -2,39 +2,49 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට Vercel එක රීස්ටාර්ට් කිරීමට ඇහැරේ
+    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට Vercel එක රීස්ටාර්ට් කරවීමට ක්‍රියාත්මක වේ
   workflow_dispatch: 
 
 permissions:
+  contents: write
   actions: write
-  contents: read
 
 concurrency:
   group: bot-infinite-loop
   cancel-in-progress: true
 
 jobs:
-  vercel-official-restart:
+  ultra-relay-engine:
     runs-on: ubuntu-latest
     steps:
-      - name: 🚀 1. Official Vercel REST API Trigger
-        run: |
-          # ගිට් පුෂ් (git push) කිරීම් කිසිවක් නැත! 
-          # කෙලින්ම නිල Vercel API එක මඟින් පැරණි සිල්පද කැඩෙන්න ඇර විනාඩි 44න් බොට්ව සුපිරියටම රීස්ටාර්ට් කරවයි.
-          
-          echo "⚡ Sending Deployment Signals to Vercel Town..."
-          
-          # [CRITICAL] Vercel එක ක්ෂණිකව රීස්ටාර්ට් කිරීමට නිල හක් එක (Hook Pulse)
-          curl -X POST "https://api.vercel.com/v1/integrations/deploy/prj_abc/abc?buildId=latest" -s -I || true
-          
-          # ඔයාගේ වෙබ් බොට් එක සජීවීව ඇක්ටිව් කිරීමට තත්පර 5ක වේගවත් වේක්අප් පල්ස් එකක්
-          curl -s "https://abc-few2et4ny-asitha-vercels-projects.vercel.app/" > /dev/null
-          echo "🚀 Ultra-Fast Trigger Completed Successfully!"
+      - name: 🚀 1. System Infrastructure Sync
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      - name: 🧹 2. Ghost Purge (History Cleanup)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🛠️ 2. Triple-Cluster Cleanup & Stabilization
         run: |
-          # වැඩක් නැති පරණ හිස්ට්‍රි ලොග්ස් ඔක්කොම ස්වයංක්‍රීයව පිරිසිදු කරයි
+          # [FIXED] .github ෆෝල්ඩර් එක ඇතුළු වර්ක්ෆ්ලෝ ෆයිල්ස් ආරක්ෂා කර අනිත් අනවශ්‍ය දේවල් පිරිසිදු කරයි
+          find . -maxdepth 1 -not -path '*/.*' -not -name '.' -exec rm -rf {} +
+          mkdir -p github_host_core session_bridge network_hold
+          
+          echo "HOST_ACTIVE: $(date)" > github_host_core/host.log
+          echo "RELAY_READY" > session_bridge/status.tmp
+
+      - name: ⬆️ 3. High-Speed Push (Vercel Trigger)
+        run: |
+          git config --global user.name "thanuh-ultra-bot"
+          git config --global user.email "bot@ultra-sync.com"
+          
+          # වර්ක්ෆ්ලෝ එකට හානියක් නොකර වෙනස්කම් ට්‍රැක් කර හිස් කමිට් එකක් සමඟ පුෂ් කරයි
+          git add github_host_core/host.log session_bridge/status.tmp || true
+          git commit --allow-empty -m "⚡ STABLE-RELAY [$(date +'%I:%M %p')]"
+          git push origin main # විනාඩි 44න් Vercel එක 100%ක් සාර්ථකව රීස්ටාර්ට් කරවයි
+
+      - name: 🧹 4. Ghost Purge (History Cleanup)
+        env:
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          # වැඩක් නැති පරණ හිස්ට්‍රි ලොග්ස් ඔක්කොම ස්වයංක්‍රීයව මකා දමයි
           echo "Cleaning up completed workflow history..."
           gh run list --workflow infinite_ultra_keeper.yml --limit 50 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
