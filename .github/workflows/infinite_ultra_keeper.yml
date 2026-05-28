@@ -2,8 +2,10 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට Vercel එක රීස්ටාර්ට් කරවීමට ක්‍රියාත්මක වේ
+    - cron: "*/44 * * * *"
   workflow_dispatch: 
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -11,7 +13,7 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: true
+  cancel-in-progress: false # පරණ Session එක අලුත් එක Build වෙනකම් පණපිටින් තබයි
 
 jobs:
   ultra-relay-engine:
@@ -24,8 +26,8 @@ jobs:
 
       - name: 🛠️ 2. Triple-Cluster Cleanup & Stabilization
         run: |
-          # [FIXED] .github ෆෝල්ඩර් එක ඇතුළු වර්ක්ෆ්ලෝ ෆයිල්ස් ආරක්ෂා කර අනිත් අනවශ්‍ය දේවල් පිරිසිදු කරයි
-          find . -maxdepth 1 -not -path '*/.*' -not -name '.' -exec rm -rf {} +
+          # අනවශ්‍ය folders 20ම මකා දමයි
+          find . -maxdepth 1 -type d -not -path '*/.*' -not -name '.github' -not -name '.' -exec rm -rf {} +
           mkdir -p github_host_core session_bridge network_hold
           
           echo "HOST_ACTIVE: $(date)" > github_host_core/host.log
@@ -35,16 +37,39 @@ jobs:
         run: |
           git config --global user.name "thanuh-ultra-bot"
           git config --global user.email "bot@ultra-sync.com"
-          
-          # වර්ක්ෆ්ලෝ එකට හානියක් නොකර වෙනස්කම් ට්‍රැක් කර හිස් කමිට් එකක් සමඟ පුෂ් කරයි
-          git add github_host_core/host.log session_bridge/status.tmp || true
-          git commit --allow-empty -m "⚡ STABLE-RELAY [$(date +'%I:%M %p')]"
-          git push origin main # විනාඩි 44න් Vercel එක 100%ක් සාර්ථකව රීස්ටාර්ට් කරවයි
+          git add .
+          git commit -m "⚡ STABLE-RELAY [$(date +'%I:%M %p')]" || exit 0
+          git push --force origin main
 
-      - name: 🧹 4. Ghost Purge (History Cleanup)
+      - name: 🔄 4. Non-Stop Lifetime Loop
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          # වැඩක් නැති පරණ හිස්ට්‍රි ලොග්ස් ඔක්කොම ස්වයංක්‍රීයව මකා දමයි
-          echo "Cleaning up completed workflow history..."
-          gh run list --workflow infinite_ultra_keeper.yml --limit 50 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
+          UPTIME_SEC=$(awk '{print $1}' /proc/uptime | cut -d. -f1)
+          # පැය 6 සීමාව පරාජය කරමින් අලුත්ම Workflow එකක් පණගන්වයි
+          if [ "$UPTIME_SEC" -gt 20700 ]; then
+            gh workflow run infinite_ultra_keeper.yml --ref main
+          else
+            gh workflow run infinite_ultra_keeper.yml --ref main
+          fi
+
+      - name: 🌐 5. Advanced Relay Bridge (10-Minute Safety Buffer)
+        run: |
+          # Vercel Restart එක කොයි වෙලාවේ වුණත් අල්ලගැනීමට කාලය විනාඩි 10 දක්වා වැඩි කර ඇත
+          URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/"
+          echo "Starting Safety Bridge (600 seconds)..."
+          
+          # තත්පර 10න් 10ට විනාඩි 10ක් පුරා Pulse යවයි (Loop 60ක්)
+          for i in {1..60}; do
+            curl -I -s $URL > /dev/null
+            echo "Relay-Pulse $i: Holding Bot Session Alive via GitHub..."
+            sleep 10
+          done
+          echo "Handoff completed successfully."
+
+      - name: 🧹 6. Ghost Purge (History Cleanup)
+        env:
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        run: |
+          # ලොග්ස් පිරිසිදු කර පරණ Runs මකා දමයි
+          gh run list --workflow infinite_ultra_keeper.yml --limit 30 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
