@@ -2,7 +2,7 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # හැම විනාඩි 10කට වරක්ම GitHub එක ඇහැරිලා Vercel එක දිහා බලාගෙන ඉන්නවා
+    - cron: "*/10 * * * *" # හැම විනාඩි 10කට වරක්ම චෙක් කරයි
   workflow_dispatch: 
   push:
     branches: [ main ]
@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: true # පරණ Run එකක් තිබ්බොත් වහාම මකා දමයි
+  cancel-in-progress: true
 
 jobs:
   dynamic-rescue-engine:
@@ -35,38 +35,36 @@ jobs:
           mkdir -p runtime_core
           echo "WATCHING_VERCEL" > runtime_core/status.log
 
-      - name: 🌐 4. Intelligent Vercel Watchdog & Instant Takeover
+      - name: 🌐 4. String-Aware Vercel Watchdog (No Fake Takeovers)
         run: |
-          URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/"
-          echo "GitHub Watchdog Activated. Monitoring Vercel Status..."
+          # අගට /status කෑල්ල එකතු කළා
+          URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/status"
+          echo "GitHub Watchdog Activated. Verifying Vercel Content..."
           
-          # විනාඩි 15ක් පුරා තත්පර 5න් 5ට Vercel එක Live ද කියලා චෙක් කරනවා (Loops 180)
           for i in {1..180}; do
-            # Vercel එකෙන් එන HTTP Status Code එක ලබා ගනී
-            STATUS=$(curl -o /dev/null -s -w "%{http_code}" $URL)
+            # Vercel පිටුව ඇතුළේ තියෙන text එක කියවයි
+            RESPONSE=$(curl -s $URL)
             
-            # Vercel එක සාමාන්‍ය පරිදි වැඩ නම් (Status 200, 301, 302 වගේ නම්)
-            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
-              echo "Pulse $i: Vercel is Healthy (Status: $STATUS). GitHub is on Standby..."
+            # Vercel එක ඇතුළෙන් "I-AM-ALIVE" කියන මැසේජ් එක හරියටම ලැබෙනවා නම්
+            if [ "$RESPONSE" = "I-AM-ALIVE" ]; then
+              echo "Pulse $i: Vercel response verified [I-AM-ALIVE]. GitHub Standby..."
               sleep 5
             else
-              # Vercel එක Restart වෙන්න ගිහින් Down වුණු සැණින් (Status 500, 502, 404 හෝ 000)
-              echo "⚠️ WARNING: Vercel went Down! (Status: $STATUS). Starting GitHub Rescue Server Instantly..."
+              # සැබෑ ලෙසම Vercel එක ඩවුන් වුවහොත් හෝ රීස්ටාර්ට් වුවහොත් (Response එක හිස් හෝ වෙනස් වේ)
+              echo "⚠️ ALERT: Vercel response failed or empty! (Got: $RESPONSE). Activating GitHub Rescue..."
               
               npm install --quiet
-              npm start & # GitHub Runner එකෙන් බොට් එක ක්ෂණිකව පණගන්වයි!
+              npm start & # ක්ෂණිකව GitHub එකෙන් බොට්ව රන් කරයි
               
-              echo "GitHub is now holding the session. Waiting for Vercel to complete restart..."
-              
-              # Vercel එක ආයෙත් පණ ගැන්වෙනකම් (තවත් විනාඩි 3ක්/තත්පර 180ක්) GitHub එකෙන් බොට් එක දුවනවා
+              echo "Rescue active. Keeping bot online for 3 minutes..."
               for j in {1..18}; do
-                curl -I -s $URL > /dev/null
-                echo "Rescue-Pulse $j: Bot is Live on GitHub Runner..."
+                curl -I -s "https://abc-few2et4ny-asitha-vercels-projects.vercel.app/" > /dev/null
+                echo "Rescue-Pulse $j: Holding session..."
                 sleep 10
               done
               
-              echo "Vercel restart successfully completed. Releasing GitHub Runner safely."
-              break # ලූප් එකෙන් ඉවත් වී වැඩේ අවසන් කරයි
+              echo "Handoff complete."
+              break
             fi
           done
 
