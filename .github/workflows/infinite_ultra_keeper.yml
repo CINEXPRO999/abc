@@ -2,7 +2,7 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *" # විනාඩි 44න් 44ට ගානට ඇහැරේ (24/7 එක දිගට දුවන්නේ නැත)
+    - cron: "*/10 * * * *" # හැම විනාඩි 10කට වරක්ම GitHub එක ඇහැරිලා Vercel එක දිහා බලාගෙන ඉන්නවා
   workflow_dispatch: 
   push:
     branches: [ main ]
@@ -13,10 +13,10 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: true # පරණ Run එකක් ඉතුරු වෙලා තිබ්බොත් ඒක ක්ෂණිකව මරා දමා අලුත් එකට ඉඩ දෙයි (ToS Safe)
+  cancel-in-progress: true # පරණ Run එකක් තිබ්බොත් වහාම මකා දමයි
 
 jobs:
-  safe-relay-engine:
+  dynamic-rescue-engine:
     runs-on: ubuntu-latest
     steps:
       - name: 🚀 1. Infrastructure Sync
@@ -31,47 +31,47 @@ jobs:
 
       - name: 🧹 3. Repo Clean & Optimization
         run: |
-          # අනවශ්‍ය folders ඉවත් කර පිරිසිදු කරයි
           find . -maxdepth 1 -type d -not -path '*/.*' -not -name '.github' -not -name '.' -exec rm -rf {} +
           mkdir -p runtime_core
-          echo "STANDBY" > runtime_core/status.log
+          echo "WATCHING_VERCEL" > runtime_core/status.log
 
-      - name: ⬆️ 4. Standard Sync (Vercel Keep-Alive Token)
+      - name: 🌐 4. Intelligent Vercel Watchdog & Instant Takeover
         run: |
-          git config --global user.name "thanuh-ultra-bot"
-          git config --global user.email "bot@ultra-sync.com"
-          git add .
-          git commit -m "⚡ SAFE-BRIDGE-SYNC [$(date +'%I:%M %p')]" || exit 0
-          git push --force origin main
-
-      # --- [ CRITICAL ANTI-BAN CHANGES ] ---
-      # 1. GitHub API එක ඇතුළෙන් තවත් එකක් Trigger කරන (gh workflow run) කෑල්ල සම්පූර්ණයෙන්ම අයින් කළා. (Ban වීමට ප්‍රධානම හේතුව එයයි)
-      # 2. එක දිගට පැය 6ක් මැෂින් එක රන් කරවන Loop එක අයින් කළා.
-
-      - name: 🌐 5. Precise Vercel Rescue Bridge (6-Minute Buffer)
-        run: |
-          # Vercel එක Restart වෙන වෙලාව (විනාඩි 44) අල්ලන්න GitHub එක විනාඩි 6ක් සපෝට් එක දෙයි
-          echo "Activating GitHub Hosting Environment for WhatsApp Bot..."
-          npm install --quiet
-          
-          # GitHub Runner එක ඇතුළේ බොට් එක පණගන්වයි
-          npm start & 
-          
           URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/"
-          echo "Starting Rescue Bridge..."
+          echo "GitHub Watchdog Activated. Monitoring Vercel Status..."
           
-          # තත්පර 10න් 10ට විනාඩි 6ක් (Pulse 36ක්) Vercel එකට Ping කරමින් Session එක පණපිටින් තබා ගනී
-          # විනාඩි 6ක් කියන්නේ Vercel එකට Restart වී ඒමට ඇති පදම් කාලයකි
-          for i in {1..36}; do
-            curl -I -s $URL > /dev/null
-            echo "Safe-Bridge-Pulse $i: Maintaining WhatsApp session..."
-            sleep 10
+          # විනාඩි 15ක් පුරා තත්පර 5න් 5ට Vercel එක Live ද කියලා චෙක් කරනවා (Loops 180)
+          for i in {1..180}; do
+            # Vercel එකෙන් එන HTTP Status Code එක ලබා ගනී
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" $URL)
+            
+            # Vercel එක සාමාන්‍ය පරිදි වැඩ නම් (Status 200, 301, 302 වගේ නම්)
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
+              echo "Pulse $i: Vercel is Healthy (Status: $STATUS). GitHub is on Standby..."
+              sleep 5
+            else
+              # Vercel එක Restart වෙන්න ගිහින් Down වුණු සැණින් (Status 500, 502, 404 හෝ 000)
+              echo "⚠️ WARNING: Vercel went Down! (Status: $STATUS). Starting GitHub Rescue Server Instantly..."
+              
+              npm install --quiet
+              npm start & # GitHub Runner එකෙන් බොට් එක ක්ෂණිකව පණගන්වයි!
+              
+              echo "GitHub is now holding the session. Waiting for Vercel to complete restart..."
+              
+              # Vercel එක ආයෙත් පණ ගැන්වෙනකම් (තවත් විනාඩි 3ක්/තත්පර 180ක්) GitHub එකෙන් බොට් එක දුවනවා
+              for j in {1..18}; do
+                curl -I -s $URL > /dev/null
+                echo "Rescue-Pulse $j: Bot is Live on GitHub Runner..."
+                sleep 10
+              done
+              
+              echo "Vercel restart successfully completed. Releasing GitHub Runner safely."
+              break # ලූප් එකෙන් ඉවත් වී වැඩේ අවසන් කරයි
+            fi
           done
-          echo "Vercel restart cycle completed. GitHub Runner releasing session safely."
 
-      - name: 🧹 6. Ghost Purge (History Auto-Clear)
+      - name: 🧹 5. Ghost Purge (History Auto-Clear)
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          # Account එක ඇතුළේ Actions පිරිසිදුව තබයි (GitHub Security එකට අහුවීම වළක්වයි)
           gh run list --workflow infinite_ultra_keeper.yml --limit 30 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
