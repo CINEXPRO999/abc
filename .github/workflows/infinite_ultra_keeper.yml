@@ -2,7 +2,7 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # හැම විනාඩි 10කට වරක්ම චෙක් කරයි
+    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට GitHub එක ක්‍රියාත්මක වේ
   workflow_dispatch: 
   push:
     branches: [ main ]
@@ -13,10 +13,10 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: true
+  cancel-in-progress: true # පරණ එකක් දුවමින් තිබුනොත් වහාම නතර කර සේෆ් කරයි
 
 jobs:
-  dynamic-rescue-engine:
+  vercel-restart-trigger:
     runs-on: ubuntu-latest
     steps:
       - name: 🚀 1. Infrastructure Sync
@@ -24,52 +24,20 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: 🛠️ 2. Node.js Initialize (20.x)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: 🧹 3. Repo Clean & Optimization
+      - name: ⬆️ 2. Force Vercel Restart via Git Push
         run: |
-          find . -maxdepth 1 -type d -not -path '*/.*' -not -name '.github' -not -name '.' -exec rm -rf {} +
-          mkdir -p runtime_core
-          echo "WATCHING_VERCEL" > runtime_core/status.log
-
-      - name: 🌐 4. String-Aware Vercel Watchdog (No Fake Takeovers)
-        run: |
-          # අගට /status කෑල්ල එකතු කළා
-          URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/status"
-          echo "GitHub Watchdog Activated. Verifying Vercel Content..."
+          git config --global user.name "thanuh-ultra-bot"
+          git config --global user.email "bot@ultra-sync.com"
           
-          for i in {1..180}; do
-            # Vercel පිටුව ඇතුළේ තියෙන text එක කියවයි
-            RESPONSE=$(curl -s $URL)
-            
-            # Vercel එක ඇතුළෙන් "I-AM-ALIVE" කියන මැසේජ් එක හරියටම ලැබෙනවා නම්
-            if [ "$RESPONSE" = "I-AM-ALIVE" ]; then
-              echo "Pulse $i: Vercel response verified [I-AM-ALIVE]. GitHub Standby..."
-              sleep 5
-            else
-              # සැබෑ ලෙසම Vercel එක ඩවුන් වුවහොත් හෝ රීස්ටාර්ට් වුවහොත් (Response එක හිස් හෝ වෙනස් වේ)
-              echo "⚠️ ALERT: Vercel response failed or empty! (Got: $RESPONSE). Activating GitHub Rescue..."
-              
-              npm install --quiet
-              npm start & # ක්ෂණිකව GitHub එකෙන් බොට්ව රන් කරයි
-              
-              echo "Rescue active. Keeping bot online for 3 minutes..."
-              for j in {1..18}; do
-                curl -I -s "https://abc-few2et4ny-asitha-vercels-projects.vercel.app/" > /dev/null
-                echo "Rescue-Pulse $j: Holding session..."
-                sleep 10
-              done
-              
-              echo "Handoff complete."
-              break
-            fi
-          done
+          # කිසිම ෆයිල් එකක් වෙනස් නොකර හිස් Commit එකක් සාදයි (Vercel Trigger එක සඳහා)
+          git commit --allow-empty -m "⚡ VERCEL-FORCE-RESTART [$(date +'%I:%M %p')]"
+          
+          # Force push කර Vercel එකට අලුත් Build එකක් ලබා දෙයි
+          git push origin main
 
-      - name: 🧹 5. Ghost Purge (History Auto-Clear)
+      - name: 🧹 3. Actions History Purge
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
+          # GitHub එක ඇතුළේ ලොග්ස් පිරිලා Security එකට අහුවීම වැළැක්වීමට පරණ Runs මකා දමයි
           gh run list --workflow infinite_ultra_keeper.yml --limit 30 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
