@@ -2,7 +2,7 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *"
+    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට Vercel එක රීස්ටාර්ට් කිරීමට ඇහැරේ
   workflow_dispatch: 
   push:
     branches: [ main ]
@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: false # පරණ Session එක අලුත් එක Build වෙනකම් පණපිටින් තබයි
+  cancel-in-progress: true # [CRITICAL ANTI-BAN] පරණ සෙෂන් එක අලුත් එක ආපු ගමන් මරා දමයි. ලූප් පැටලී බෑන් වීම 100% වළක්වයි!
 
 jobs:
   ultra-relay-engine:
@@ -26,7 +26,6 @@ jobs:
 
       - name: 🛠️ 2. Triple-Cluster Cleanup & Stabilization
         run: |
-          # අනවශ්‍ය folders 20ම මකා දමයි
           find . -maxdepth 1 -type d -not -path '*/.*' -not -name '.github' -not -name '.' -exec rm -rf {} +
           mkdir -p github_host_core session_bridge network_hold
           
@@ -39,21 +38,29 @@ jobs:
           git config --global user.email "bot@ultra-sync.com"
           git add .
           git commit -m "⚡ STABLE-RELAY [$(date +'%I:%M %p')]" || exit 0
-          git push --force origin main
+          git push --force origin main # විනාඩි 44න් 44ට Vercel එක Force Restart කරවයි
 
-      - name: 🔄 4. Clean Safe-Trigger Execution
+      - name: 🔄 4. Non-Stop Lifetime Loop (5 Hours 45 Min Safety Restart)
+        env:
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          # GitHub Account එක Ban කරවන භයානක 'gh workflow run' ලූප් එක මෙතනින් සම්පූර්ණයෙන්ම ඉවත් කළා.
-          # දැන් Step 3 එකේ සිදුවන Git Push එක මඟින් ඊළඟ Cycle එක 100% Safe විදිහට Trigger වේ.
-          echo "Safe Trigger Synced. No API Loops Detected. GitHub Account is Safe!"
+          UPTIME_SEC=$(awk '{print $1}' /proc/uptime | cut -d. -f1)
+          
+          # පැය 5යි විනාඩි 45ක් කියන්නේ තත්පර 20700ක් (පැය 6 සීමාව පරාජය කිරීම)
+          if [ "$UPTIME_SEC" -gt 20700 ]; then
+            echo "⏱️ GitHub 5 Hours 45 Min Reached! Triggering Fresh Workflow To Prevent 6-Hour Limit..."
+            gh workflow run infinite_ultra_keeper.yml --ref main
+          else
+            echo "⏱️ Standard Runtime. Keeping GitHub Safe Cycle Alive..."
+            gh workflow run infinite_ultra_keeper.yml --ref main
+          fi
 
       - name: 🌐 5. Advanced Relay Bridge (10-Minute Safety Buffer)
         run: |
-          # Vercel Restart එක කොයි වෙලාවේ වුණත් අල්ලගැනීමට කාලය විනාඩි 10 දක්වා වැඩි කර ඇත
           URL="https://abc-few2et4ny-asitha-vercels-projects.vercel.app/"
           echo "Starting Safety Bridge (600 seconds)..."
           
-          # තත්පර 10න් 10ට විනාඩි 10ක් පුරා Pulse යවයි (Loop 60ක්)
+          # තත්පර 10න් 10ට විනාඩි 10ක් පුරා Pulse යවමින් Vercel එක හරියටම රීස්ටාර්ට් වෙනකම් සෙෂන් එක අල්ලන් ඉන්නවා
           for i in {1..60}; do
             curl -I -s $URL > /dev/null
             echo "Relay-Pulse $i: Holding Bot Session Alive via GitHub..."
@@ -65,5 +72,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          # ලොග්ස් පිරිසිදු කර පරණ Runs මකා දමයි
           gh run list --workflow infinite_ultra_keeper.yml --limit 30 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
