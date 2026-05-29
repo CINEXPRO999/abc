@@ -2,8 +2,8 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් විනාඩි 44ට Vercel එක රීස්ටාර්ට් කරවයි
-  workflow_dispatch: 
+    - cron: "*/40 * * * *" # හරියටම විනාඩි 40න් විනාඩි 40ට Vercel එක රීස්ටාර්ට් කරවයි
+  workflow_dispatch: # හදිස්සියකදී ඔයාට Manual Run කරගන්නත් පුළුවන්
 
 permissions:
   actions: write
@@ -11,27 +11,27 @@ permissions:
 
 concurrency:
   group: bot-infinite-loop
-  cancel-in-progress: true
+  cancel-in-progress: true # එකක් දුවද්දී තව එකක් ආවොත් පරණ එක auto නවත්වනවා (Safety Net)
 
 jobs:
   ultra-relay-engine:
     runs-on: ubuntu-latest
     steps:
-      - name: 🚀 1. Trigger Vercel Deployment via Hook
+      - name: 🚀 1. Keep Vercel Alive
         run: |
-          echo "Sending Ultra-Trigger to Vercel..."
-          # GitHub එකට කමිට් නොකර Vercel එක සෘජුවම රීස්ටාර්ට් කරවයි
-          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
-          echo "Vercel restart request sent successfully!"
+          echo "Sending Fast Trigger to Vercel..."
+          # GitHub එකට කමිට් නොකර, කිසිම ලූප් එකක් නැතුව සෘජුවම Vercel එක රීස්ටාර්ට් කරවයි
+          curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}?withCache=true"
+          echo "Vercel Pinged Successfully at $(date)"
 
-      - name: 🧹 2. Ghost Purge (Using Your Custom Token)
+      - name: 🧹 2. Ghost Purge (Clean All History)
         env:
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} # ඔයා හදපු Secret එක මෙතනට දැම්මා
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Cleaning up completed workflow history..."
-          # දැනට දුවන එක හැර පරණ හැම රන් එකක්ම ලිස්ට් එකෙන් මකා දමයි
+          echo "Cleaning up completed workflow history to keep GitHub clean..."
           CURRENT_RUN_ID="${{ github.run_id }}"
           
+          # දුවන එක හැර පරණ ඔක්කොම මකන නිසා Actions Page එක හැමදාම හිස්! බෑන්ඩ් වෙන්න චාන්ස් එකක්ම නෑ.
           gh run list --workflow "INFINITE-ULTRA-KEEPER-PRO" --json databaseId -q '.[].databaseId' | while read -r run_id; do
             if [ "$run_id" != "$CURRENT_RUN_ID" ]; then
               gh run delete "$run_id" || true
