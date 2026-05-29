@@ -2,12 +2,12 @@ name: INFINITE-ULTRA-KEEPER-PRO
 
 on:
   schedule:
-    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් 44ට Vercel එක රීස්ටාර්ට් කරවීමට ක්‍රියාත්මක වේ
+    - cron: "*/44 * * * *" # හරියටම විනාඩි 44න් විනාඩි 44ට Vercel එක රීස්ටාර්ට් කරවයි
   workflow_dispatch: 
 
 permissions:
-  contents: write
   actions: write
+  contents: read
 
 concurrency:
   group: bot-infinite-loop
@@ -17,34 +17,23 @@ jobs:
   ultra-relay-engine:
     runs-on: ubuntu-latest
     steps:
-      - name: 🚀 1. System Infrastructure Sync
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: 🛠️ 2. Triple-Cluster Cleanup & Stabilization
+      - name: 🚀 1. Trigger Vercel Deployment via Hook
         run: |
-          # [FIXED] .github ෆෝල්ඩර් එක ඇතුළු වර්ක්ෆ්ලෝ ෆයිල්ස් ආරක්ෂා කර අනිත් අනවශ්‍ය දේවල් පිරිසිදු කරයි
-          find . -maxdepth 1 -not -path '*/.*' -not -name '.' -exec rm -rf {} +
-          mkdir -p github_host_core session_bridge network_hold
-          
-          echo "HOST_ACTIVE: $(date)" > github_host_core/host.log
-          echo "RELAY_READY" > session_bridge/status.tmp
+          echo "Sending Ultra-Trigger to Vercel..."
+          # GitHub එකට කමිට් නොකර Vercel එක සෘජුවම රීස්ටාර්ට් කරවයි
+          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+          echo "Vercel restart request sent successfully!"
 
-      - name: ⬆️ 3. High-Speed Push (Vercel Trigger)
-        run: |
-          git config --global user.name "thanuh-ultra-bot"
-          git config --global user.email "bot@ultra-sync.com"
-          
-          # වර්ක්ෆ්ලෝ එකට හානියක් නොකර වෙනස්කම් ට්‍රැක් කර හිස් කමිට් එකක් සමඟ පුෂ් කරයි
-          git add github_host_core/host.log session_bridge/status.tmp || true
-          git commit --allow-empty -m "⚡ STABLE-RELAY [$(date +'%I:%M %p')]"
-          git push origin main # විනාඩි 44න් Vercel එක 100%ක් සාර්ථකව රීස්ටාර්ට් කරවයි
-
-      - name: 🧹 4. Ghost Purge (History Cleanup)
+      - name: 🧹 2. Ghost Purge (Using Your Custom Token)
         env:
-          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }} # ඔයා හදපු Secret එක මෙතනට දැම්මා
         run: |
-          # වැඩක් නැති පරණ හිස්ට්‍රි ලොග්ස් ඔක්කොම ස්වයංක්‍රීයව මකා දමයි
           echo "Cleaning up completed workflow history..."
-          gh run list --workflow infinite_ultra_keeper.yml --limit 50 --json databaseId -q '.[].databaseId' | xargs -I{} gh run delete {} || true
+          # දැනට දුවන එක හැර පරණ හැම රන් එකක්ම ලිස්ට් එකෙන් මකා දමයි
+          CURRENT_RUN_ID="${{ github.run_id }}"
+          
+          gh run list --workflow "INFINITE-ULTRA-KEEPER-PRO" --json databaseId -q '.[].databaseId' | while read -r run_id; do
+            if [ "$run_id" != "$CURRENT_RUN_ID" ]; then
+              gh run delete "$run_id" || true
+            fi
+          done
